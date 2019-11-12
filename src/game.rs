@@ -11,8 +11,8 @@ use crate::states::StatesResult;
 pub const WINDOW_WIDTH: f32 = 1024.;
 pub const WINDOW_HEIGHT: f32 = 768.;
 
-const VIRTUAL_WIDTH: f32 = 640.;
-const VIRTUAL_HEIGHT: f32 = 480.;
+const VIRTUAL_WIDTH: f32 = 413.;
+const VIRTUAL_HEIGHT: f32 = 248.;
 
 const X_RATIO: f32 = WINDOW_WIDTH / VIRTUAL_WIDTH;
 const Y_RATIO: f32 = WINDOW_HEIGHT / VIRTUAL_HEIGHT;
@@ -69,14 +69,14 @@ impl event::EventHandler for Game {
         // Canvas에 이미지를 그리도록 변경
         graphics::set_canvas(ctx, Some(&self.buffer));
 
-        graphics::clear(ctx, graphics::BLACK);
-
         // 현재 states 값을 얻어와 해당 states의 render 를 실행한다.
         let current_state = self.states.last_mut().unwrap();
 
         current_state.render(ctx);
 
         // 이제 메인 윈도우에 그림
+        graphics::clear(ctx, [0.7, 0.7, 0.7, 0.5].into());
+
         graphics::set_canvas(ctx, None);
         let dest_point = na::Point2::new(0., 0.);
         let scale = na::Vector2::new(X_RATIO * X_RATIO, Y_RATIO * Y_RATIO);
