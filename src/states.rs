@@ -84,7 +84,7 @@ impl GameStates {
             sprite: ggez::graphics::Mesh::new_rectangle(
                 ctx,
                 ggez::graphics::DrawMode::fill(),
-                Rect::new(0., 0., 150., 150.),
+                Rect::new(0., 0., 640., 480.),
                 ggez::graphics::WHITE,
             )
             .unwrap(),

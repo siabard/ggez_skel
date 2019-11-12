@@ -1,24 +1,44 @@
 use ggez;
 use ggez::event;
 use ggez::event::KeyCode;
-use ggez::graphics;
+use ggez::graphics::{self, Canvas};
+use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
 
 use crate::states;
 use crate::states::StatesResult;
 
+pub const WINDOW_WIDTH: f32 = 1024.;
+pub const WINDOW_HEIGHT: f32 = 768.;
+
+const VIRTUAL_WIDTH: f32 = 640.;
+const VIRTUAL_HEIGHT: f32 = 480.;
+
+const X_RATIO: f32 = WINDOW_WIDTH / VIRTUAL_WIDTH;
+const Y_RATIO: f32 = WINDOW_HEIGHT / VIRTUAL_HEIGHT;
+
 pub struct Game {
     states: Vec<Box<dyn states::States>>,
+    buffer: ggez::graphics::Canvas,
 }
 
 impl Game {
-    pub fn new(_ctx: &mut Context) -> GameResult<Game> {
+    pub fn new(ctx: &mut Context) -> GameResult<Game> {
         // 초기에는 InitState를 넣는다.
 
         let init_state = states::InitStates::new();
 
+        let buffer = ggez::graphics::Canvas::new(
+            ctx,
+            VIRTUAL_WIDTH as u16,
+            VIRTUAL_HEIGHT as u16,
+            ggez::conf::NumSamples::One,
+        )
+        .unwrap();
+
         let s = Game {
             states: vec![Box::new(init_state)],
+            buffer,
         };
         Ok(s)
     }
@@ -46,10 +66,33 @@ impl event::EventHandler for Game {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
+        // Canvas에 이미지를 그리도록 변경
+        graphics::set_canvas(ctx, Some(&self.buffer));
+
+        graphics::clear(ctx, graphics::BLACK);
+
         // 현재 states 값을 얻어와 해당 states의 render 를 실행한다.
         let current_state = self.states.last_mut().unwrap();
 
         current_state.render(ctx);
+
+        // 이제 메인 윈도우에 그림
+        graphics::set_canvas(ctx, None);
+        let dest_point = na::Point2::new(0., 0.);
+        let scale = na::Vector2::new(X_RATIO * X_RATIO, Y_RATIO * Y_RATIO);
+
+        // canvas buffer를 윈도우에 출력
+        graphics::draw(
+            ctx,
+            &self.buffer,
+            graphics::DrawParam::new()
+                .dest(dest_point)
+                .src(graphics::Rect::new(0., 0., 1., 1.))
+                .scale(scale),
+        )?;
+
+        graphics::present(ctx)?;
+
         Ok(())
     }
 }
