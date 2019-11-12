@@ -11,11 +11,8 @@ use crate::states::StatesResult;
 pub const WINDOW_WIDTH: f32 = 1024.;
 pub const WINDOW_HEIGHT: f32 = 768.;
 
-const VIRTUAL_WIDTH: f32 = 413.;
-const VIRTUAL_HEIGHT: f32 = 248.;
-
-const X_RATIO: f32 = WINDOW_WIDTH / VIRTUAL_WIDTH;
-const Y_RATIO: f32 = WINDOW_HEIGHT / VIRTUAL_HEIGHT;
+pub const VIRTUAL_WIDTH: f32 = 2048.;
+pub const VIRTUAL_HEIGHT: f32 = 768. * 2.;
 
 pub struct Game {
     states: Vec<Box<dyn states::States>>,
@@ -66,29 +63,34 @@ impl event::EventHandler for Game {
     }
 
     fn draw(&mut self, ctx: &mut Context) -> GameResult {
+        let dest_point = na::Point2::new(0., 0.);
+
+        // 전체 화면을 가상의 크기로 설정한다.
+        graphics::set_screen_coordinates(
+            ctx,
+            graphics::Rect::new(0.0, 0.0, VIRTUAL_WIDTH, VIRTUAL_HEIGHT),
+        )
+        .unwrap();
+
         // Canvas에 이미지를 그리도록 변경
         graphics::set_canvas(ctx, Some(&self.buffer));
 
         // 현재 states 값을 얻어와 해당 states의 render 를 실행한다.
         let current_state = self.states.last_mut().unwrap();
 
-        current_state.render(ctx);
+        current_state.render(ctx, &mut self.buffer);
 
         // 이제 메인 윈도우에 그림
-        graphics::clear(ctx, [0.7, 0.7, 0.7, 0.5].into());
-
         graphics::set_canvas(ctx, None);
-        let dest_point = na::Point2::new(0., 0.);
-        let scale = na::Vector2::new(X_RATIO * X_RATIO, Y_RATIO * Y_RATIO);
 
         // canvas buffer를 윈도우에 출력
+        graphics::clear(ctx, [0.7, 0.7, 0.7, 0.5].into());
         graphics::draw(
             ctx,
             &self.buffer,
             graphics::DrawParam::new()
                 .dest(dest_point)
-                .src(graphics::Rect::new(0., 0., 1., 1.))
-                .scale(scale),
+                .src(graphics::Rect::new(0., 0., 1., 1.)),
         )?;
 
         graphics::present(ctx)?;

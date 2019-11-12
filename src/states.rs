@@ -1,5 +1,5 @@
 use crate::game::Game;
-use ggez::graphics::{self, DrawMode, DrawParam, Drawable, Rect};
+use ggez::graphics::{self, Canvas, DrawMode, DrawParam, Drawable, Rect};
 use ggez::input::keyboard::KeyCode;
 use ggez::nalgebra as na;
 use ggez::{Context, GameResult};
@@ -12,15 +12,15 @@ pub enum StatesResult {
 
 pub trait States {
     fn update(&mut self, ctx: &mut Context) -> StatesResult;
-    fn render(&mut self, ctx: &mut Context) -> StatesResult;
+    fn render(&mut self, ctx: &mut Context, buffer: &mut Canvas) -> StatesResult;
 }
 
 #[derive(Clone)]
-pub struct InitStates;
+pub struct InitStates {}
 
 impl InitStates {
     pub fn new() -> InitStates {
-        InitStates
+        InitStates {}
     }
 }
 impl States for InitStates {
@@ -34,21 +34,25 @@ impl States for InitStates {
         }
     }
 
-    fn render(&mut self, ctx: &mut Context) -> StatesResult {
+    /// 모든 Render는 이제 자체에 포함된 buffer에만 그린다.
+    fn render(&mut self, ctx: &mut Context, buffer: &mut Canvas) -> StatesResult {
+        ggez::graphics::set_canvas(ctx, Some(buffer));
+
         graphics::clear(ctx, [0.0, 0.0, 0.0, 1.0].into());
 
         graphics::present(ctx);
 
+        ggez::graphics::set_canvas(ctx, None);
         StatesResult::Void
     }
 }
 
 #[derive(Clone)]
-pub struct PauseStates;
+pub struct PauseStates {}
 
 impl PauseStates {
     pub fn new() -> PauseStates {
-        PauseStates
+        PauseStates {}
     }
 }
 
@@ -62,11 +66,14 @@ impl States for PauseStates {
         }
     }
 
-    fn render(&mut self, ctx: &mut Context) -> StatesResult {
+    fn render(&mut self, ctx: &mut Context, buffer: &mut Canvas) -> StatesResult {
+        ggez::graphics::set_canvas(ctx, Some(buffer));
+
         graphics::clear(ctx, [0.0, 1.0, 0.0, 1.0].into());
 
         graphics::present(ctx);
 
+        ggez::graphics::set_canvas(ctx, None);
         StatesResult::Void
     }
 }
@@ -102,17 +109,19 @@ impl States for GameStates {
             let pause_state = PauseStates::new();
             StatesResult::PushState(Box::new(pause_state))
         } else if ggez::input::keyboard::is_key_pressed(ctx, KeyCode::Up) {
-            self.y = self.y - 1.;
+            self.y = self.y - 100.;
             StatesResult::Void
         } else if ggez::input::keyboard::is_key_pressed(ctx, KeyCode::Down) {
-            self.y = self.y + 1.;
+            self.y = self.y + 100.;
             StatesResult::Void
         } else {
             StatesResult::Void
         }
     }
 
-    fn render(&mut self, ctx: &mut Context) -> StatesResult {
+    fn render(&mut self, ctx: &mut Context, buffer: &mut Canvas) -> StatesResult {
+        graphics::set_canvas(ctx, Some(buffer));
+
         graphics::clear(ctx, [1.0, 0.0, 0.0, 1.0].into());
 
         let dest = na::Point2::new(self.x, self.y);
@@ -120,6 +129,8 @@ impl States for GameStates {
             .draw(ctx, DrawParam::default().dest(dest))
             .unwrap();
         graphics::present(ctx);
+
+        graphics::set_canvas(ctx, None);
 
         StatesResult::Void
     }
