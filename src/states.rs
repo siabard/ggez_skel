@@ -7,6 +7,7 @@ use ggez::{Context, GameResult};
 pub enum StatesResult {
     PushState(Box<dyn States>),
     PopState,
+    Trans(Box<dyn States>),
     Void,
 }
 
@@ -28,7 +29,7 @@ impl States for InitStates {
         // E가 눌러지면 게임 시작한다.
         if ggez::input::keyboard::is_key_pressed(ctx, KeyCode::E) {
             let game_state = GameStates::new(ctx);
-            StatesResult::PushState(Box::new(game_state))
+            StatesResult::Trans(Box::new(game_state))
         } else {
             StatesResult::Void
         }
